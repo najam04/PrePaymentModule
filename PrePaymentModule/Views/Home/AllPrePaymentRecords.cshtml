@@ -1,0 +1,265 @@
+﻿
+@model IEnumerable<PrePaymentModule.Models.Prepayment>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css">
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+
+<style>
+    body {
+        background-color: #fff; /* Light background color */
+        color: #002D42; /* Dark text for contrast */
+    }
+
+    .dt-button {
+        background-color: #007BFF; /* Bootstrap primary color */
+        color: white;
+        border: 1px solid #007BFF; /* Visible border for buttons */
+        padding: 8px 12px;
+        margin: 5px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.3s; /* Smooth transition */
+    }
+
+        .dt-button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+
+    .details-button {
+        background-color: #17A2BB; /* Dark blue background color */
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 15px;
+        cursor: pointer;
+        transition: background-color 0.3s; /* Smooth transition */
+    }
+
+        .details-button:hover {
+            background-color: #138496; /* Darker blue on hover */
+        }
+
+
+    .table-responsive {
+        overflow-x: auto; /* Enable horizontal scrolling for the table */
+    }
+
+    table {
+        border-radius: 10px; /* Rounded corners */
+        overflow: hidden; /* Ensure the border-radius works */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); /* Box shadow */
+        border: 5px solid black; /* 5px solid dark black border for the table */
+    }
+
+    input[type="search"] {
+        background-color: white; /* White background for search */
+        border: 1px solid #ced4da; /* Light border */
+        border-radius: 4px; /* Rounded corners */
+        padding: 10px; /* Padding */
+        transition: border-color 0.3s; /* Smooth transition */
+    }
+
+        input[type="search"]:hover {
+            border-color: #007BFF; /* Change border color on hover */
+        }
+
+    /* Optional: styling for horizontal sidebar */
+    .sidebar {
+        background-color: #007BFF; /* Sidebar background color */
+        color: white; /* Sidebar text color */
+        padding: 10px; /* Padding for sidebar */
+        border-radius: 5px; /* Rounded corners for sidebar */
+    }
+
+    .styled-form {
+        display: flex;                                                                                                                                         
+        flex-wrap: wrap;
+        flex-direction: row;
+        justify-content: end;
+        padding-bottom: 30px;
+        padding-right: 0px;
+    }
+
+    .gpad {
+        margin-top: 0px;
+        margin-left: 8px;
+    }
+
+    .form-control {
+        border-radius: 5px;
+        height: 40px;
+    }
+
+    .same-height-button {
+        height: 40px;
+        width: 100%;
+    }
+
+
+    @@media (max-width: 768px) {
+        .styled-form {
+            display: flex;
+            flex-direction: column;
+            justify-content: start;
+        }
+
+        .gpad {
+            margin-left: 0px;
+        }
+    }
+</style>
+
+<h2 class="text-center mb-4">Details of Prepayments</h2>
+
+@* <form class="form-group col-md-6 styled-form" style="float: right;" asp-action="GenerateReport" asp-controller="Home" method="post">
+    <div>
+        <label for="startDate">Start Date</label>
+        <input type="date" class="form-control" id="startDate" name="startDate" required>
+    </div>
+    <div class="gpad">
+        <label for="endDate">End Date</label>
+        <input type="date" class="form-control" id="endDate" name="endDate" required>
+    </div>
+    <div class="gpad" style="display:flex; flex-direction:column; align-items:flex-end; justify-content:space-between;">
+        <label>  </label>
+        <button type="submit" class="btn btn-primary same-height-button" style="margin-top:23px;">Generate Report</button>
+    </div>
+</form> *@
+<div>
+    <table id="productsTable" class="table table-striped table-bordered table-responsive">
+        <thead>
+            <tr>
+                <th>Installment Code</th>
+                <th>Original Value</th>
+                <th>Acquisition Date</th>
+                <th>Time Unit</th>
+                <th>Deferred Expense Account</th>
+                <th>Expense Account</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var record in Model)
+            {
+                <tr>
+                    <td>@record.InstallmentCOde</td>
+                    <td>@(record.OriginalValue.HasValue ? ((double)record.OriginalValue.Value).ToString("N2") : "N/A")</td>
+                    <td>
+                        @(record.AcquisitionDate.HasValue
+                            ? record.AcquisitionDate.Value.ToString("dd/MM/yyyy")
+                            : "N/A")
+                    </td>
+                    <td>@(record.Recognitions + "/" + record.TimeUnit)</td>
+                    <td>@record.DeferredExpenseAccount</td>
+                    <td>@record.ExpenseAccount</td>
+                    <td>
+                        <div style="display: flex; align-items: center;`">
+                            <form asp-action="Installments" asp-controller="Home">
+                                <input type="hidden" name="installmentCode" value="@record.InstallmentCOde" />
+                                <button type="submit" class="details-button btn-sm" style="display: flex; align-items: center; padding: 5px 10px;">
+                                    Installments <i class="fas fa-info-circle" style="margin-left: 5px;"></i>
+                                </button>
+                            </form>
+                           @*  <form asp-action="SaveEntries" asp-controller="Home">
+                                <input type="hidden" name="installmentCode" value="@record.InstallmentCOde" />
+                                <button type="submit" class="details-button btn btn-secondary btn-sm" style="width: 110px; display: flex; align-items: center; justify-content:center; padding: 5px 10px; background-color: #007bff; margin-left:5px;">
+                                    Generate GV <i class="fas fa-info-circle" style="margin-left: 5px;"></i>
+                                </button>
+                            </form> *@
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>  
+
+    </table>
+</div>
+
+<div class="mt-3">
+    <a asp-action="PrePaymentModule" asp-controller="Home" class="btn btn-primary" style="padding-left: 20px; padding-right: 20px; min-width: 150px;">Add New</a>
+</div>
+
+
+ 
+<style>
+    .dt-button,
+    .dt-button:hover {
+        background-color: #003366 !important; /* Dark blue background */
+        color: white !important; /* Text color */
+        border-radius: 5px; /* Rounded corners */
+        border: none !important; /* Remove default border */
+        transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transition */
+    }
+
+        .dt-button:hover {
+            background-color: #00509e !important; /* Lighter blue on hover */
+            transform: scale(1.05); /* Slightly enlarge on hover */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow on hover */
+        }
+</style>
+
+
+<script>
+    $(document).ready(function () {
+        $('#productsTable').DataTable({
+            paging: true,
+            searching: true,
+            ordering: true,
+            pageLength: 25,
+            lengthMenu: [25, 50, 100],
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i> Excel',
+                    titleAttr: 'Export to Excel',
+                    className: 'dt-button',
+                    init: function (api, node) {
+                        $(node).css({
+                            'background-color': '#003366',
+                            'color': 'white',
+                            'border-radius': '5px'
+                        });
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-download"></i> Download',
+                    titleAttr: 'Download as PDF',
+                    className: 'dt-button',
+                    init: function (api, node) {
+                        $(node).css({
+                            'background-color': '#003366',
+                            'color': 'white',
+                            'border-radius': '5px'
+                        });
+                    }
+                },
+                {
+                    extend: 'print',
+                    text: '<i class="fas fa-print"></i> Print',
+                    titleAttr: 'Print Table',
+                    className: 'dt-button',
+                    init: function (api, node) {
+                        $(node).css({
+                            'background-color': '#003366',
+                            'color': 'white',
+                            'border-radius': '5px'
+                        });
+                    }
+                }
+            ]
+        });
+    });
+</script>

@@ -1,0 +1,174 @@
+﻿@model IEnumerable<PrePaymentModule.Models.History>
+
+<link href="~/css/style.css" rel="stylesheet" />
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+
+<!-- Buttons extension CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css">
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- DataTables JS -->
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+<!-- Buttons extension JS -->
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+
+<!-- JSZip for Excel export -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<!-- PDFMake for PDF export -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+
+<!-- Buttons HTML5 export -->
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+<style>
+    /* Custom styles for the buttons */
+    .dt-button {
+        background-color: red; /* Background color */
+        color: white; /* Text color */
+        border: none; /* Remove border */
+        padding: 8px 12px; /* Padding */
+        margin: 5px; /* Margin between buttons */
+        border-radius: 4px; /* Rounded corners */
+        font-size: 14px; /* Font size */
+        cursor: pointer; /* Cursor style */
+    }
+
+        /* Change color on hover */
+        .dt-button:hover {
+            background-color: darkred; /* Darker background on hover */
+        }
+
+    .details-button {
+        background-color: #002D42;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 15px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+        .details-button:hover {
+            background-color: #002D42;
+        }
+        
+        /* Top Buttons CSS */
+    .dt-button,
+    .dt-button:hover {
+        background-color: #003366 !important; /* Dark blue background */
+        color: white !important; /* Text color */
+        border-radius: 5px; /* Rounded corners */
+        border: none !important; /* Remove default border */
+        transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transition */
+    }
+
+    .dt-button:hover {
+        background-color: #00509e !important; /* Lighter blue on hover */
+        transform: scale(1.05); /* Slightly enlarge on hover */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow on hover */
+        }
+
+</style>
+<div class="container cont-1">
+<h2 class="text-center mb-4">Installment History</h2>
+    <table style="border:2px solid #A9A9A9; border-radius:10px;" id="productsTable" class="display table-responsive">
+    <thead>
+        <tr>
+            <th>Installment Code</th>
+            <th>Original Amount</th>
+            <th>Installment Amount</th>
+            <th>Due Date</th>
+            <th>Remaining Balance</th>
+            <th>Status</th>
+        </tr>
+    </thead>
+    <tbody>  
+        @foreach (var record in Model)
+        {
+            <tr>
+                <td>@record.InstallmentCode</td>
+                <td>@record.OriginalAmount</td>
+                <td>@record.Amount</td>
+                <td>
+                    @(record.DueDate.HasValue
+                        ? record.DueDate.Value.ToString("dd/MM/yyyy")
+                        : "N/A")
+                </td>
+
+                <td>@record.RemainingBalance</td>
+                <td>@record.Status</td>
+           
+            </tr>
+        }
+    </tbody>
+</table>
+
+<a asp-action="Installments" asp-controller="Home" asp-route-installmentCode="@ViewBag.InstallmentCode" class="btn btn-primary mt-3">Back</a>
+</div>
+<script>
+    $(document).ready(function () {
+        $('#productsTable').DataTable();
+    });
+     
+    $('#productsTable').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        pageLength: 25,
+        lengthMenu: [25, 50, 100],
+        dom: 'Bfrtip',
+        buttons: [
+
+            {
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i> Excel', // Button with icon
+                titleAttr: 'Export to Excel', // Tooltip text
+                className: 'dt-button',
+                init: function (api, node) {
+                    $(node).css({
+                        'background-color': '#003366',
+                        'color': 'white',
+                        'border-radius': '5px'
+                    });
+                }
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-download"></i> Download', // Button with icon
+                titleAttr: 'Download as PDF', // Tooltip text
+                className: 'dt-button',
+                init: function (api, node) {
+                    $(node).css({
+                        'background-color': '#003366',
+                        'color': 'white',
+                        'border-radius': '5px'
+                    });
+                }
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i> Print', // Button with icon
+                titleAttr: 'Print Table', // Tooltip text
+                className: 'dt-button',
+                init: function (api, node) {
+                    $(node).css({
+                        'background-color': '#003366',
+                        'color': 'white',
+                        'border-radius': '5px'
+                    });
+                }
+            }
+        ]
+    });
+
+</script>
+

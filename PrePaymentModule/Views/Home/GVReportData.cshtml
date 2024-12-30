@@ -1,0 +1,362 @@
+﻿@model IEnumerable<PrePaymentModule.Models.Installment>
+
+<link href="~/css/style.css" rel="stylesheet" />
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+<!-- DataTables CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.css">
+
+<!-- Buttons extension CSS -->
+<link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+
+
+<!-- DataTables JS -->
+<script type="text/javascript" src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.js"></script>
+
+<!-- Buttons extension JS -->
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+
+<!-- JSZip for Excel export -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<!-- PDFMake for PDF export -->
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+
+<!-- Buttons HTML5 export -->
+<script type="text/javascript" src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+
+<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+
+<link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.css" rel="stylesheet">
+
+<!-- Include SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.0.19/dist/sweetalert2.min.js"></script>
+<style>
+
+
+    /* Ensure checkbox background matches the row background */
+    #productsTable tbody tr:nth-child(even) td {
+        background-color: #f2f2f2; /* Light gray for even rows */
+    }
+
+    #productsTable tbody tr:nth-child(odd) td {
+        background-color: #ffffff; /* White for odd rows */
+    }
+
+    /* Style the checkboxes */
+    .installment-checkbox {
+        cursor: pointer; /* Change cursor style */
+    }
+
+    /* Optional: Change the text color in table rows */
+    #productsTable tbody tr td {
+        color: #333; /* Dark gray text color */
+    }
+
+    /* Optional: Change the hover effect for rows */
+    #productsTable tbody tr:hover {
+        background-color: #e0e0e0; /* Slightly darker gray on hover */
+    }
+
+
+
+    /* Custom styles for the buttons */
+    .dt-button {
+        background-color: red; /* Background color */
+        color: white; /* Text color */
+        border: none; /* Remove border */
+        padding: 8px 12px; /* Padding */
+        margin: 5px; /* Margin between buttons */
+        border-radius: 4px; /* Rounded corners */
+        font-size: 14px; /* Font size */
+        cursor: pointer; /* Cursor style */
+    }
+
+        /* Change color on hover */
+        .dt-button:hover {
+            background-color: darkred; /* Darker background on hover */
+        }
+
+    .details-button {
+        background-color: #002D42;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 15px;
+        cursor: pointer;
+        text-decoration: none;
+    }
+
+        .details-button:hover {
+            background-color: #002D42;
+        }
+
+    .done-button {
+        display: none; /* Hidden by default */
+    }
+
+    #historyTable {
+        display: none; /* Hidden by default */
+        margin-top: 20px;
+    }
+
+</style>
+<div class="container cont-2">
+    <h2 class="text-center mb-4">PrePayment GV Report </h2>
+
+    <table style="border:2px solid #A9A9A9; border-radius:10px;" id="productsTable">
+        <thead>
+            <tr>
+                <th>Installment ID</th>
+                <th>Installment Code</th>
+                <th>Original Amount</th>
+                <th>Installment Amount</th>
+                <th>Due Date</th>
+                <th>Remaining Balance</th>
+            </tr>
+        </thead>
+        <tbody style="text-align:center;">
+            @foreach (var record in Model)
+            {
+                <tr>
+                    <td>@record.InstallmentId</td>
+                    <td>@record.InstallmentCOde</td>
+                    <td>@(record.OriginalAmount.HasValue ? ((double)record.OriginalAmount.Value).ToString("N2") : "N/A")</td>
+                    <td>@(record.Amount.HasValue ? ((double)record.Amount.Value).ToString("N2") : "N/A")</td>
+                    <td>
+                        @(record.DueDate.HasValue
+                            ? record.DueDate.Value.ToString("dd/MM/yyyy")
+                            : "N/A")
+                    </td>
+                    <td>@(record.RemainingBalance.HasValue ? ((double)record.RemainingBalance.Value).ToString("N2") : "N/A")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="d-flex justify-content-between mt-3">
+        <!-- Back button -->
+        <a asp-action="AllPrePaymentRecords" asp-controller="Home" class="btn btn-primary mt-3">Back</a>
+
+        <!-- Generate All GV button -->
+        <button type="button" id="generateAllGv" class="btn btn-success mt-3">Generate All GV</button>
+    </div>
+
+</div>
+
+<style>
+    .dt-button,
+    .dt-button:hover {
+        background-color: #003366 !important; /* Dark blue background */
+        color: white !important; /* Text color */
+        border-radius: 5px; /* Rounded corners */
+        border: none !important; /* Remove default border */
+        transition: background-color 0.3s ease, transform 0.2s ease; /* Smooth transition */
+    }
+
+        .dt-button:hover {
+            background-color: #00509e !important; /* Lighter blue on hover */
+            transform: scale(1.05); /* Slightly enlarge on hover */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add shadow on hover */
+        }
+</style>
+
+<script>
+    $(document).ready(function () {
+        $('#productsTable').DataTable();
+    });
+
+    $('#productsTable').DataTable({
+        paging: true,
+        searching: true,
+        ordering: true,
+        pageLength: 25,
+        lengthMenu: [25, 50, 100],
+        dom: 'Bfrtip',
+        buttons: [
+
+            {
+                extend: 'excel',
+                text: '<i class="fas fa-file-excel"></i> Excel', // Button with icon
+                titleAttr: 'Export to Excel', // Tooltip text
+                className: 'dt-button',
+                init: function (api, node) {
+                    $(node).css({
+                        'background-color': '#003366',
+                        'color': 'white',
+                        'border-radius': '5px'
+                    });
+                }
+            },
+            {
+                extend: 'pdf',
+                text: '<i class="fas fa-download"></i> Download', // Button with icon
+                titleAttr: 'Download as PDF', // Tooltip text
+                className: 'dt-button',
+                init: function (api, node) {
+                    $(node).css({
+                        'background-color': '#003366',
+                        'color': 'white',
+                        'border-radius': '5px'
+                    });
+                }
+            },
+            {
+                extend: 'print',
+                text: '<i class="fas fa-print"></i> Print', // Button with icon
+                titleAttr: 'Print Table', // Tooltip text
+                className: 'dt-button',
+                init: function (api, node) {
+                    $(node).css({
+                        'background-color': '#003366',
+                        'color': 'white',
+                        'border-radius': '5px'
+                    });
+                }
+            }
+        ]
+    });
+
+    // $('.done-button').on('click', function () {
+    //     var installmentCode = $(this).data('installment-code');
+    //     var installmentId = $(this).data('installment-id');
+
+    //     $.ajax({
+    //         url: '@Url.Action("SaveEntries", "Home")', // Make sure this URL is correct
+    //         type: 'POST',
+    //         data: {
+    //             installmentCode: installmentCode,
+    //             installmentId: installmentId
+    //         },
+    //         success: function (response) {
+    //             if (response.success) {
+    //                 // SweetAlert Success Notification
+    //                 Swal.fire({
+    //                     title: 'Success!',
+    //                     text: "GV has been created and the report is ready for download.",
+    //                     icon: 'success',
+    //                     confirmButtonText: 'OK'
+    //                 }).then(() => {
+    //                     // Trigger file download after user clicks OK in the alert
+    //                     var blob = new Blob([response.fileBytes], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+    //                     var link = document.createElement("a");
+    //                     link.href = URL.createObjectURL(blob);
+    //                     link.download = "PrepaymentScheduleReport.xlsx";
+    //                     link.click(); // Trigger the download
+    //                 }).then(() => {
+    //                     // Reload the page after SweetAlert and download complete
+    //                     location.reload();  // This will refresh the page
+    //                 });
+
+    //                 // Update the UI after success (without refreshing the page)
+    //                 $('#status-' + installmentId).text('Created GV');
+    //                 $('#done-button-' + installmentId).prop('disabled', true);
+    //             } else {
+    //                 // SweetAlert Error Notification
+    //                 Swal.fire({
+    //                     title: 'Error!',
+    //                     text: response.message,
+    //                     icon: 'error',
+    //                     confirmButtonText: 'OK'
+    //                 });
+    //             }
+    //         },
+    //         error: function (xhr) {
+    //             // SweetAlert for AJAX request error
+    //             Swal.fire({
+    //                 title: 'Error!',
+    //                 text: "An error occurred: " + xhr.responseText,
+    //                 icon: 'error',
+    //                 confirmButtonText: 'OK'
+    //             });
+    //         }
+    //     });
+    // });
+
+    $('#generateAllGv').on('click', function () {
+        var installmentIds = [];
+        $('#productsTable tbody tr').each(function () {
+            var installmentId = $(this).find('td').eq(0).text(); // Assuming InstallmentId is in the first column
+            installmentIds.push(parseInt(installmentId)); // Ensure it's an integer
+        });
+
+        console.log(installmentIds); // Check if you have the correct values
+
+        $.ajax({
+            url: '@Url.Action("GenerateAllGv", "Home")', // Ensure this points to the correct action
+            type: 'POST',
+            data: JSON.stringify({ installmentIds: installmentIds }), // Send as JSON
+            contentType: 'application/json', // Set the correct content type
+            success: function (response) {
+                if (response.success) {
+                    Swal.fire({
+                        title: 'Success!',
+                        text: response.message,
+                        icon: 'success',
+                        confirmButtonText: 'OK'
+                    }).then(() => {
+                        // Decode the Base64 string to binary data
+                        var byteCharacters = atob(response.fileBytes); // Decode the base64 string
+                        var byteArray = new Uint8Array(byteCharacters.length);
+
+                        // Convert each byte to an unsigned byte array
+                        for (var i = 0; i < byteCharacters.length; i++) {
+                            byteArray[i] = byteCharacters.charCodeAt(i);
+                        }
+
+                        var date = new Date();
+                        var monthIndex = date.getMonth();  // 0-indexed month (0 for January, 11 for December)
+                        var year = date.getFullYear();
+
+                        // Array of month names
+                        var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+                        // Get the full month name
+                        var monthName = monthNames[monthIndex];
+                        // Create a Blob from the binary data
+                        var blob = new Blob([byteArray], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+
+                        // Create a download link for the file
+                        var link = document.createElement("a");
+                        link.href = URL.createObjectURL(blob);
+                        link.download = "AllPrepaymentGVReport_" + monthName + "_" + year + ".xlsx"; // Use the filename returned from the backend if required
+                        link.click();
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: response.message,
+                        icon: 'error',
+                        confirmButtonText: 'OK'
+                    });
+                }
+            },
+            error: function (xhr) {
+                Swal.fire({
+                    title: 'Error!',
+                    text: "An error occurred: " + xhr.responseText,
+                    icon: 'error',
+                    confirmButtonText: 'OK'
+                });
+            }
+        });
+    });
+
+
+
+
+
+
+
+
+
+</script>

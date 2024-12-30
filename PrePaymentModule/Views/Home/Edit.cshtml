@@ -1,0 +1,266 @@
+﻿@model PrePaymentModule.Models.Prepayment
+
+<link href="~/css/style.css" rel="stylesheet" />
+<head>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.24/css/jquery.dataTables.css">
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <style>
+        .Insurance-Container {
+            border: 2px solid gray;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #f0f4f8;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #333;
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            color: #555;
+        }
+
+        .btn-custom {
+            border: 2px solid #002d42;
+        }
+    </style>
+</head>
+
+<div class="container mt-4 Insurance-Container">
+    <form id="insuranceForm" asp-action="Edit" asp-controller="Home" method="post">
+        <div class="mb-4">
+            <h5>Deferred Expense Name</h5>
+            <h1>Insurance</h1>
+            <hr />
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <h2>Asset Values</h2>
+                <div class="form-group">
+                    <label for="originalValue">Original Value</label>
+                    <input name="originalValue" type="number" id="originalValue" value="@Model.OriginalValue" class="form-control" required />
+                </div>
+                <div class="form-group">
+                    <label for="acquisitionDate">Acquisition Date</label>
+                    <input id="acquisitionDate" name="acquisitionDate" type="date" value="@Model.AcquisitionDate?.ToString("yyyy-MM-dd")" class="form-control" required />
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <h2>Current Values</h2>
+                <div class="form-group">
+                    <label for="currentValue">Residual Amount to Recognize</label>
+                    <input name="currentValue" type="number" id="currentValue" value="@Model.CurrentValue" class="form-control" />
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <h2>Depreciation Method</h2>
+                <div class="form-group">
+                    <label for="recognitions">Number of Recognitions</label>
+                    <div class="input-group">
+                        <input name="recognitions" type="number" id="recognitions" value="@Model.Recognitions" class="form-control" required />
+                        <select name="timeUnit" id="timeUnit" class="form-control">
+
+                            <option>@Model.TimeUnit</option>
+                            <option>Months</option>
+                            <option>Years</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Depreciated Amount</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                <input type="checkbox" id="perDayCheckbox" onclick="toggleDepreciatedAmount('perDay')" />
+                                Per Day
+                            </div>
+                        </div>
+                        <div class="input-group-prepend">
+                            <div class="input-group-text">
+                                <input type="checkbox" id="perMonthCheckbox" onclick="toggleDepreciatedAmount('perMonth')" />
+                                Per Month
+                            </div>
+                        </div>
+                        <input name="depreciatedAmount" type="number" id="depreciatedAmount" value="@Model.DepreciatedAmount" class="form-control" placeholder="Calculated Amount" readonly required />
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 mb-3">
+                <h2>Accounting</h2>
+                <div class="form-group">
+                    <label for="accountTypeDropdown">Deferred Expense Account</label>
+                    <select name="deferredExpenseAccount" id="accountTypeDropdown" class="form-control" required>
+                        <option value="">Select an option</option>
+                        @foreach (var account in ViewBag.DeferredExpenseAccounts as List<string>)
+                        {
+                            <option value="@account" selected="@account.Equals(Model.DeferredExpenseAccount)">@account</option>
+                        }
+                    </select>
+                    
+                </div>
+                <div class="form-group">
+                    <label for="subTypeDropdown">Expense Account</label>
+                    <select name="expenseAccount" id="subTypeDropdown" class="form-control" required>
+                        <option value="">Select an option</option>
+                        @foreach (var account in ViewBag.ExpenseAccounts as List<string>)
+                        {
+                            <option value="@account" selected="@account.Equals(Model.ExpenseAccount)">@account</option>
+                        }
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="voucher">Voucher</label>
+                    <input name="voucher" type="text" value="General Voucher (GV)" class="form-control" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="voucher">Voucher Ref# (Optional)</label>
+                    <input name="VoucherReference" type="text" value="@Model.VoucherReference" class="form-control" placeholder="Enter Reference No" />
+                </div>
+            </div>
+        </div>
+
+        <input type="hidden" name="result" id="resultField" placeholder="Result" readonly />
+
+        <div class="text-right mt-4">
+           @*  <button type="submit" id="computeButton" class="btn btn-success btn-lg" style="background-color: #002d42; border: none;">Compute Deferral</button> *@
+            <button type="button" class="btn btn-success" id="approveButton">Approve</button>
+            <button type="button" class="btn btn-danger" id="rejectButton">Reject</button>
+            <button type="button" class="btn btn-danger" id="revertButton">Revert</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function calculateValue() {
+        const originalValue = parseFloat(document.getElementById('originalValue').value);
+        const currentValue = parseFloat(document.getElementById('currentValue').value);
+        const recognitions = parseFloat(document.getElementById('recognitions').value);
+        const timeUnit = document.getElementById('timeUnit').value;
+
+        // Use current value if available; otherwise, fall back to original value
+        const valueToUse = !isNaN(currentValue) ? currentValue : originalValue;
+
+        // Check if value to use is provided
+        if (!isNaN(valueToUse) && !isNaN(recognitions)) {
+            let days;
+
+            // Determine the number of days based on the selected time unit
+            if (timeUnit === "Days") {
+                days = recognitions; // Directly use the number of recognitions
+            } else if (timeUnit === "Months") {
+                days = recognitions * 30; // Assuming 30 days per month
+            } else if (timeUnit === "Years") {
+                days = recognitions * 360; // Assuming 365 days per year
+            } else {
+                document.getElementById('resultDisplay').innerHTML = "Please select a valid time unit.";
+                return; // Exit if no valid time unit is selected
+            }
+
+            // Check if days is valid before division
+            if (days <= 0) {
+                document.getElementById('resultDisplay').innerHTML = "Days must be greater than zero.";
+                return;
+            }
+
+            // Perform the division using the determined value
+            const result = valueToUse / days;
+
+            // Display the result
+            document.getElementById('resultField').value = result.toFixed(2);
+
+            // Update the depreciated amount based on checkbox
+            updateDepreciatedAmount(result);
+        } else {
+            document.getElementById('resultField').value = "Please ensure a valid value is entered.";
+        }
+    }
+
+    function updateDepreciatedAmount(result) {
+        const perDayChecked = document.getElementById('perDayCheckbox').checked;
+        const perMonthChecked = document.getElementById('perMonthCheckbox').checked;
+
+        if (perDayChecked) {
+            document.getElementById('depreciatedAmount').value = result.toFixed(2);
+        } else if (perMonthChecked) {
+            const monthlyResult = result * 30; // Convert to monthly amount
+            document.getElementById('depreciatedAmount').value = monthlyResult.toFixed(2);
+        } else {
+            document.getElementById('depreciatedAmount').value = ''; // Clear if neither is checked
+        }
+    }
+
+    function toggleDepreciatedAmount(type) {
+        if (type === 'perDay') {
+            if (document.getElementById('perDayCheckbox').checked) {
+                // Uncheck "Per Month" and update amount
+                document.getElementById('perMonthCheckbox').checked = false;
+                calculateValue(); // Recalculate and show the value
+            } else {
+                document.getElementById('depreciatedAmount').value = ''; // Clear if unchecked
+            }
+        } else if (type === 'perMonth') {
+            if (document.getElementById('perMonthCheckbox').checked) {
+                // Uncheck "Per Day" and update amount
+                document.getElementById('perDayCheckbox').checked = false;
+                calculateValue(); // Recalculate and show the value
+            } else {
+                document.getElementById('depreciatedAmount').value = ''; // Clear if unchecked
+            }
+        }
+    }
+
+    function resetCheckboxes() {
+        // Uncheck "Per Month" checkbox and clear amount when either value changes
+        document.getElementById('perMonthCheckbox').checked = false;
+        document.getElementById('depreciatedAmount').value = ''; // Clear the amount when changed
+    }
+
+    document.getElementById('recognitions').addEventListener('input', function () {
+        resetCheckboxes(); // Reset checkboxes when recognitions change
+        document.getElementById('perDayCheckbox').checked = false;
+    });
+
+    document.getElementById('timeUnit').addEventListener('change', function () {
+        resetCheckboxes(); // Reset checkboxes when time unit changes
+        document.getElementById('perDayCheckbox').checked = false;
+    });
+
+    $('#computeButton').click(function () {
+        const originalValue = parseFloat($('#originalValue').val());
+        const currentValue = parseFloat($('#currentValue').val());
+        const recognitions = parseInt($('#recognitions').val());
+        const timeUnit = $('#timeUnit').val();
+        const acquisitionDate = $('#acquisitionDate').val();
+
+        $.ajax({
+            type: 'POST',
+            url: '@Url.Action("GenerateInstallments")',
+            data: {
+                originalValue: originalValue,
+                currentValue: currentValue,
+                recognitions: recognitions,
+                acquisitionDate: acquisitionDate,
+                timeUnit: timeUnit
+            },
+            success: function (data) {
+                // Display the installments in a datatable or any UI component you prefer
+                console.log(data);
+                // Here you can call a function to render the data in your table
+            },
+            error: function (xhr, status, error) {
+                console.error('Error occurred: ' + error);
+            }
+        });
+    });
+</script>

@@ -1,0 +1,56 @@
+﻿<style>
+    /* Optional: styling for Generate Report Button */
+    .styled-form {
+        display: flex;
+        flex-wrap: wrap;
+        flex-direction: row;
+        justify-content: end;
+        padding-bottom: 30px;
+        padding-right: 0px;
+    }
+
+    .gpad {
+        margin-top: 0px;
+        margin-left: 8px;
+    }
+
+    .form-control {
+        border-radius: 5px;
+        height: 40px;
+    }
+
+    .same-height-button {
+        height: 40px;
+        width: 100%;
+    }
+
+
+    @@media (max-width: 768px) {
+        .styled-form {
+            display: flex;
+            flex-direction: column;
+            justify-content: start;
+        }
+
+        .gpad {
+            margin-left: 0px;
+        }
+    }
+
+</style>
+<h2 class="text-center mb-4">Prepayment GV Schedule</h2>
+<form class="form-group col-md-6 styled-form" asp-action="GVReportData" asp-controller="Home" method="post">
+    <div>
+        <label for="startDate">Start Date</label>
+        <input type="date" class="form-control" id="startDate" name="startDate" required>
+    </div>
+    <div class="gpad">
+        <label for="endDate">End Date</label>
+        <input type="date" class="form-control" id="endDate" name="endDate" required>
+    </div>
+    <div class="gpad" style="display:flex; flex-direction:column; align-items:flex-end; justify-content:space-between;">
+        <label>  </label>
+        <button type="submit" class="btn btn-primary same-height-button" style="margin-top:23px;">Generate Report</button>
+    </div>
+</form>
+

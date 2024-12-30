@@ -1,0 +1,18 @@
+﻿
+.cont-1 {
+    width: 80% !important;
+}
+
+.cont-2 {
+    width: 90% !important;
+}
+
+@media (max-width: 768px){
+    .cont-1 {
+        width: 100% !important;
+    }
+
+    .cont-2 {
+        width: 100% !important;
+    }
+}

@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.10.35122.118
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrePaymentModule", "PrePaymentModule\PrePaymentModule.csproj", "{763AF9DE-991A-4422-84F6-D8665625ABAD}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{763AF9DE-991A-4422-84F6-D8665625ABAD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{763AF9DE-991A-4422-84F6-D8665625ABAD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{763AF9DE-991A-4422-84F6-D8665625ABAD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{763AF9DE-991A-4422-84F6-D8665625ABAD}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {8F808361-F8CA-4493-920C-59746D31BB8C}
+	EndGlobalSection
+EndGlobal

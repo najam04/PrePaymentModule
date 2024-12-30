@@ -1,0 +1,298 @@
+﻿@using System.Data
+@model DataTable
+@* @{
+    var reportData = ViewBag.ReportData as DataTable;
+} *@
+
+<h2>
+    Prepayment Schedule<br />
+  
+</h2>
+<div style="text-align: center; margin-bottom: 20px;">
+    <strong>Report Period:</strong>
+    @ViewBag.StartDate - @ViewBag.EndDate
+</div>
+<!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.3/css/jquery.dataTables.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.3/css/buttons.dataTables.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+<!-- jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- DataTables JS -->
+<script src="https://cdn.datatables.net/1.13.3/js/jquery.dataTables.js"></script>
+<!-- Buttons extension JS -->
+<script src="https://cdn.datatables.net/buttons/2.2.3/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.3/js/buttons.print.min.js"></script>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f9f9f9;
+        margin: 0;
+        padding: 20px;
+        font-size: 14px; /* Smaller font for body */
+    }
+
+    h2 {
+        text-align: center;
+        color: #333;
+        font-size: 18px; /* Smaller font for heading */
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        font-size: 14px; /* Smaller font for table */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    th, td {
+        padding: 8px; /* Reduced padding for smaller rows */
+        border: 1px solid #ddd;
+        text-align: center;
+    }
+
+    th {
+        background-color: #002D42;
+        color: white;
+        text-transform: uppercase;
+        font-size: 14px; /* Smaller font for table headers */
+    }
+
+    tbody tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+
+    tbody tr:hover {
+        background-color: #e0f7fa;
+    }
+
+    .error-message {
+        color: red;
+        margin: 20px;
+        font-weight: bold;
+        text-align: center;
+        font-size: 14px; /* Smaller font for error messages */
+    }
+
+    .no-data {
+        text-align: center;
+        font-size: 14px; /* Smaller font for no data message */
+        color: #555;
+    }
+</style>
+
+<table id="tblhistory" class="display">
+    <thead>
+      
+        <tr>
+            <th>Sr No</th>
+            <th>Installment Code</th>
+            <th>Expense Account</th>
+            <th>Deferred Expense Account</th>
+            <th>Original Amount</th>
+            <th>Opening Balance</th>
+            <th>From</th>
+            <th>To</th>
+            <!-- Dynamic month headers -->
+            @foreach (DataColumn column in Model.Columns)
+            {
+                if (!new[] { "InstallmentCode", "ExpenseAccount", "DeferredExpenseAccount", "OriginalAmount", "OpeningBalance", "From", "To", "ClosingBalance" }.Contains(column.ColumnName))
+                {
+                    <th>@column.ColumnName</th>
+                }
+            }
+            <th>Closing Balance</th>
+        </tr>
+    </thead>
+    <tbody>
+
+        @{
+            decimal OriginalAmount = 0;
+            decimal OpeningBalance = 0;
+            decimal ClosingBalance = 0;
+            decimal Monthvalue = 0;
+           // Dictionary<string, decimal> DataColection = new Dictionary<string, decimal>();
+           // List<(string, decimal)> listOfValueTuples = new List<(string, decimal)>() { };
+            DataTable dt = new DataTable();
+            dt.Columns.Add("Key", typeof(string));
+            dt.Columns.Add("Value", typeof(decimal));
+          
+            // List<decimal> decimalList = new List<decimal>();
+        }
+
+        @foreach (DataRow row in Model.Rows)
+        {
+            <tr>
+               @*  <td class="" ></td> *@
+
+                <td></td>
+                <td> @row["InstallmentCode"]</td>
+                <td>@row["ExpenseAccount"]</td>
+                <td>@row["DeferredExpenseAccount"]</td>
+                <td>@(row["OriginalAmount"] == DBNull.Value ? "N/A" : Convert.ToDecimal(row["OriginalAmount"]).ToString("N2"))</td>
+                <td>@(row["OpeningBalance"] == DBNull.Value ? "N/A" : Convert.ToDecimal(row["OpeningBalance"]).ToString("N2"))</td>
+                <td>@Convert.ToDateTime(row["From"]).ToString("yyyy-MM-dd")</td> 
+                <td>@Convert.ToDateTime(row["To"]).ToString("yyyy-MM-dd")</td>   
+                <!-- Dynamic month data -->
+                @foreach (DataColumn column in Model.Columns)
+                {
+                    if (!new[] { "InstallmentCode", "ExpenseAccount", "DeferredExpenseAccount", "OriginalAmount", "OpeningBalance", "From", "To", "ClosingBalance" }.Contains(column.ColumnName))
+                    {
+                       
+                        if (decimal.TryParse(row[column.ColumnName].ToString(), out decimal result))
+                        {
+
+
+                           
+                           // DataColection.Add(column.ColumnName, Convert.ToDecimal(row[column.ColumnName]));
+                            dt.Rows.Add(column.ColumnName, Convert.ToDecimal(row[column.ColumnName]));
+                            <td>@Convert.ToDecimal(row[column.ColumnName]).ToString("N2")</td>
+                        }
+                        else
+                        {
+                           
+                            <td>@row[column.ColumnName]</td>
+                        }
+                        
+                    }
+                   
+                }
+                <td>@row["ClosingBalance"]</td>
+            </tr>
+            OriginalAmount += (row["OriginalAmount"] == DBNull.Value ? 0 : Convert.ToDecimal(row["OriginalAmount"]));
+            OpeningBalance += (row["OpeningBalance"] == DBNull.Value ? 0 : Convert.ToDecimal(row["OpeningBalance"]));
+            ClosingBalance += (row["ClosingBalance"] == DBNull.Value ? 0 : Convert.ToDecimal(row["ClosingBalance"]));
+           // decimalList.Add(Monthvalue);
+        }
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>Total</td>
+            <td>@OriginalAmount.ToString("N2")</td>
+            <td>@OpeningBalance.ToString("N2")</td>
+            <td></td>
+            <td></td>
+            <!-- Dynamic month data -->
+            
+            @foreach (DataColumn column in Model.Columns)
+                {
+                    if (!new[] { "InstallmentCode", "ExpenseAccount", "DeferredExpenseAccount", "OriginalAmount", "OpeningBalance", "From", "To", "ClosingBalance" }.Contains(column.ColumnName))
+                    {
+
+                     Monthvalue = dt.AsEnumerable()
+                    .Where(row => row.Field<string>("Key") == column.ColumnName)
+                    .Sum(row => row.Field<decimal>("Value"));
+                    
+                    
+                  @*   DataColection
+                    .Where(kvp => kvp.Key == column.ColumnName)
+                .Sum(kvp => kvp.Value); *@
+
+                    <td>@Monthvalue.ToString("N2")</td>
+                    }
+                else if (column.ColumnName == "TimePeriod")
+                    {
+                    <td></td>
+                }
+                else
+                {
+                   
+                }
+            }
+              
+            
+            <td>@ClosingBalance.ToString("N2")</td>
+        </tr>
+
+    </tbody>
+</table>
+
+<div class="mt-3">
+    <a asp-action="PrePaymentScheduleReport" asp-controller="Home" class="btn btn-primary" style="padding-left: 20px; padding-right: 20px; min-width: 150px;">Back</a>
+</div>
+  
+ 
+<script>
+    $(document).ready(function () {
+        console.log("Document ready, initializing DataTable");
+
+        $('#tblhistory').DataTable({
+            paging: true,
+            searching: true,
+            info: true,
+            pageLength: 25,
+            lengthMenu: [25, 50, 100],
+            dom: 'Bfrtip',
+
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-download"></i> Download',
+                    titleAttr: 'Export to Excel',
+                    className: 'dt-button',
+                    title: function () {
+                        return 'Prepayment Schedule Report: ' + '@ViewBag.StartDate' + ' - ' + '@ViewBag.EndDate';
+                    },
+                    init: function (api, node) {
+                        $(node).css({
+                            'background-color': '#003366',
+                            'color': 'white',
+                            'border-radius': '5px'
+                        });
+                    }
+                }
+                
+              
+            ],
+            language: {
+                emptyTable: "No data available in table"
+            },
+            autoWidth: true,
+            columnDefs: [
+                { targets: [6, 7], width: '120px' },
+                { targets: 2, className: 'dt-left' },
+                { targets: 3, className: 'dt-left' }
+            ],
+            "columnDefs": [
+                { "targets": 0, "orderable": false } // Disable sorting for the first column
+            ],
+            "rowCallback": function (row, data, index) {
+                // Calculate the overall row number (index + 1 + the starting index for the page)
+                var globalIndex = index + this.api().settings()[0]._iDisplayStart + 1;
+                $('td', row).eq(0).html(globalIndex); // Set row number in the first column
+            }
+
+           
+         
+        });
+        console.log("DataTable initialized successfully");
+    });
+</script>
+
+<style>
+    /* Add this CSS to prevent text wrapping in date columns */
+    #tblhistory td:nth-child(7),
+    #tblhistory td:nth-child(8) {
+        white-space: nowrap; /* Prevent wrapping */
+    }
+
+    /* Optionally, you can set a minimum width for the Deferred Expense Account column */
+    #tblhistory td:nth-child(3) {
+        min-width: 200px; /* Adjust as necessary */
+    }
+    #tblhistory td:nth-child(4) {
+        min-width: 200px; /* Adjust as necessary */
+    }
+</style>
+
+
